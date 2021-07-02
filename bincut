@@ -6,18 +6,22 @@ usage () {
   cat <<EOM
 Usage: $(basename "$0") [OPTION]... BINARY
   -h                  ヘルプを表示
-  -o VALUE            先頭からのオフセットを指定する（デフォルトは0）
-  -s VALUE            サイズを指定する（デフォルトは10）
-  -w VALUE            1行あたりの出力バイト数を指定する（デフォルトは16）
+  -o OFFSET           先頭からのオフセットを指定する（デフォルトは0）
+  -s BYTES            出力するバイト数を指定する（デフォルトは10）
+  -w WIDTH            1行あたりの出力バイト数を指定する（デフォルトは16）
   -c LANG OBJNAME     変数代入の形に変換する
                       { ${pglang[@]} }
 
 EOM
-
-  exit 2
+  exit 1
 }
 
-# arguments
+# no args
+if [ "$1" == "" ]; then
+  usage
+fi
+
+# get arguments
 while [ $# -gt 0 ]
 do
   case $1 in
@@ -91,7 +95,7 @@ fi
 case $lang in
   c)
     echo "$res" | sed -e'1i\
-const unsigned char '$objname'[]={
+const unsigned char '$objname'[] = {
   s/\([0-9a-f][0-9a-f]\) */0x\1,/g
   $s/,$//
   $a\
