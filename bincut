@@ -1,0 +1,109 @@
+#!/bin/bash
+declare -a pglang=("c" "python")
+
+# help
+usage () {
+  cat <<EOM
+Usage: $(basename "$0") [OPTION]... BINARY
+  -h                  ヘルプを表示
+  -o VALUE            先頭からのオフセットを指定する（デフォルトは0）
+  -s VALUE            サイズを指定する（デフォルトは10）
+  -w VALUE            1行あたりの出力バイト数を指定する（デフォルトは16）
+  -c LANG OBJNAME     変数代入の形に変換する
+                      { ${pglang[@]} }
+
+EOM
+
+  exit 2
+}
+
+# arguments
+while [ $# -gt 0 ]
+do
+  case $1 in
+    -h | --help)
+      usage
+      ;;
+    -o)
+      offset="$2"
+      shift 2
+      ;;
+    -s)
+      size="$2"
+      shift 2
+      ;;
+    -w)
+      width="$2"
+      shift 2
+      ;;
+    -c)
+      echo ${pglang[@]} | grep -q "$2"
+      if [ $? -ne 0 ]; then
+        echo "( ${pglang[@]} )から指定してください"
+        exit 1
+      fi
+
+      lang="$2"
+      objname="$3"
+      shift 3
+      ;;
+    *)
+      if [ -z "$bin" ]; then
+        bin="$1"
+      else
+        echo "引数が多いです."
+        usage
+      fi
+      shift
+      ;;
+  esac
+done
+
+# arg check
+if [ -z "$bin" ]; then
+  echo "バイナリが指定されていません"
+  exit 1
+fi
+
+if [ -z "$offset" ]; then
+  offset=0
+fi
+
+if [ -z "$size" ]; then
+  size=10
+fi
+
+
+
+# width=0: 改行なし
+# width=n: nバイト区切りで表示
+if [ -n "$width" ]; then
+  if [ "$width" -eq "0" ]; then
+    res=$(od -j "$offset" -N "$size" -A n -t x1 -v "$bin" | sed -ze 's/\n//g')
+    #| sed -z '$a\\n'
+  else
+    res=$(od -j "$offset" -N "$size" -A n -t x1 -v -w"$width" "$bin")
+  fi
+else
+  res=$(od -j "$offset" -N "$size" -A n -t x1 -v "$bin")
+fi
+
+case $lang in
+  c)
+    echo "$res" | sed -e'1i\
+const unsigned char '$objname'[]={
+  s/\([0-9a-f][0-9a-f]\) */0x\1,/g
+  $s/,$//
+  $a\
+};
+    '
+    ;;
+  python)
+    echo "lang: ${lang}"
+    echo "name: ${objname}"
+    ;;
+  *)
+    echo "$res"
+    exit 2
+    ;;
+esac
