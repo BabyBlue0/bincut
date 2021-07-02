@@ -99,11 +99,15 @@ const unsigned char '$objname'[]={
     '
     ;;
   python)
-    echo "lang: ${lang}"
-    echo "name: ${objname}"
+    echo "$res" | sed -e'1i\
+'$objname' = [
+  s/\([0-9a-f][0-9a-f]\) */0x\1,/g
+  $s/,$//
+  $a\
+]
+    '
     ;;
   *)
     echo "$res"
-    exit 2
     ;;
 esac
