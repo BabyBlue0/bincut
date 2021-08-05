@@ -77,6 +77,11 @@ if [ -z "$size" ]; then
   size=10
 fi
 
+#ファイルが存在するかのチェック
+if [ ! -e "$bin" ]; then
+  echo "指定したバイナリが存在しません"
+  exit 1
+fi
 
 
 # width=0: 改行なし
@@ -116,9 +121,8 @@ const unsigned char '$objname'[] = {
     echo "$res" | sed -ze 's/\n//g
     s/^ /"/g
     s/\([0-9a-f][0-9a-f]\) */\\x\1/g
-    s/$/"/g
-    s/^/#define '$objname' /
-    $a\
+    s/$/"\n/g
+    s/^/#define '$objname'\t/
     '
     ;;
   *)
