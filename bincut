@@ -1,5 +1,5 @@
 #!/bin/bash
-declare -a pglang=("c" "python")
+declare -a pglang=("c" "python" "c_define")
 
 # help
 usage () {
@@ -109,6 +109,16 @@ const unsigned char '$objname'[] = {
   $s/,$//
   $a\
 ]
+    '
+    ;;
+  c_define)
+    # wオプション（表示幅）を無効化して表示する
+    echo "$res" | sed -ze 's/\n//g
+    s/^ /"/g
+    s/\([0-9a-f][0-9a-f]\) */\\x\1/g
+    s/$/"/g
+    s/^/#define '$objname' /
+    $a\
     '
     ;;
   *)
